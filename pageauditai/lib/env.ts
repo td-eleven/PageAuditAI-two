@@ -15,6 +15,34 @@ function isProductionRuntime(): boolean {
 }
 
 /**
+ * Supabase "Session" / direct URLs use `db.<ref>.supabase.co:5432`. Vercel serverless
+ * often cannot reach that host (IPv6 / routing / cold starts). Use the Transaction
+ * pooler URI from Supabase → Settings → Database (port 6543, `*.pooler.supabase.com`).
+ */
+function warnIfSupabaseDirectDatabaseUrlOnVercel(databaseUrl: string): void {
+  if (process.env.VERCEL !== "1") return;
+  try {
+    const normalized = databaseUrl
+      .replace(/^postgresql:/i, "http:")
+      .replace(/^postgres:/i, "http:");
+    const u = new URL(normalized);
+    if (!u.hostname.startsWith("db.") || !u.hostname.endsWith(".supabase.co")) {
+      return;
+    }
+    const port = u.port || "5432";
+    if (port !== "5432") return;
+    console.warn(
+      "[env] DATABASE_URL uses Supabase direct DB (db.*.supabase.co:5432). " +
+        "Vercel serverless often cannot reach it. Replace with the Transaction pooler " +
+        "connection string (Supabase Dashboard → Settings → Database), and add " +
+        "`?pgbouncer=true` (and your `schema=` query param) to the pooler URL for Prisma.",
+    );
+  } catch {
+    /* ignore parse errors */
+  }
+}
+
+/**
  * Call from `instrumentation.ts` (Node runtime). Throws on fatal misconfiguration
  * so the process fails fast with a clear message (Vercel logs).
  */
@@ -38,6 +66,8 @@ export function validateProductionEnvironment(): void {
         "Set them in Vercel Project Settings → Environment Variables.",
     );
   }
+
+  warnIfSupabaseDirectDatabaseUrlOnVercel(process.env.DATABASE_URL ?? "");
 
   if (process.env.VERCEL === "1" && !process.env.CRON_SECRET?.trim()) {
     console.warn(

@@ -85,6 +85,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               code: e.code,
               meta: e.meta,
             });
+          } else if (
+            e instanceof Error &&
+            e.constructor.name === "PrismaClientInitializationError"
+          ) {
+            log.error("[auth]", "credentials authorize database error", {
+              reason: "database_unreachable",
+            });
           } else {
             log.error("[auth]", "credentials authorize database error", e);
           }
