@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { Prisma } from "@prisma/client";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
@@ -50,14 +51,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
         const email = String(credentials.email).toLowerCase().trim();
-        const password = String(credentials.password);
+        const password = String(credentials.password).trimEnd();
         try {
           const user = await prisma.user.findUnique({ where: { email } });
-          if (!user?.password) {
+          if (!user) {
+            log.warn("[auth]", "credentials sign-in rejected", {
+              reason: "user_not_found",
+            });
+            return null;
+          }
+          if (!user.password) {
+            log.warn("[auth]", "credentials sign-in rejected", {
+              reason: "no_password_hash",
+            });
             return null;
           }
           const valid = await bcrypt.compare(password, user.password);
           if (!valid) {
+            log.warn("[auth]", "credentials sign-in rejected", {
+              reason: "password_mismatch",
+            });
             return null;
           }
           return {
@@ -67,7 +80,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             image: user.image,
           };
         } catch (e) {
-          log.error("[auth]", "credentials authorize database error", e);
+          if (e instanceof Prisma.PrismaClientKnownRequestError) {
+            log.error("[auth]", "credentials authorize database error", {
+              code: e.code,
+              meta: e.meta,
+            });
+          } else {
+            log.error("[auth]", "credentials authorize database error", e);
+          }
           return null;
         }
       },
