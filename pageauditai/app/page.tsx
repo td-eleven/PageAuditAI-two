@@ -1,4 +1,15 @@
+const defaultSupportEmail = "support@pageauditai.com";
+
+function mailtoHref(email: string, subject: string) {
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}`;
+}
+
 export default function Home() {
+  const supportEmail =
+    process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() || defaultSupportEmail;
+  const demoMailto = mailtoHref(supportEmail, "PageAuditAI — Book a demo");
+  const salesMailto = mailtoHref(supportEmail, "PageAuditAI — Sales contact");
+
   const trustLogos = ["Northwind", "Vantage", "Helio", "Summit", "Astra"];
   const features = [
     {
@@ -34,13 +45,13 @@ export default function Home() {
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a
-              href="#"
+              href="/login"
               className="inline-flex h-11 items-center justify-center rounded-full bg-[#2f6faa] px-6 text-sm font-medium text-white transition hover:bg-[#285e90]"
             >
               Start Free Trial
             </a>
             <a
-              href="#"
+              href={demoMailto}
               className="inline-flex h-11 items-center justify-center rounded-full border border-[#cbdceb] bg-white px-6 text-sm font-medium text-[#355777] transition hover:bg-[#eef4fb]"
             >
               Book a Demo
@@ -118,13 +129,13 @@ export default function Home() {
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <a
-                href="#"
+                href="/dashboard/billing"
                 className="inline-flex h-11 items-center justify-center rounded-full bg-[#2f6faa] px-6 text-sm font-medium text-white transition hover:bg-[#285e90]"
               >
                 View Plans
               </a>
               <a
-                href="#"
+                href={salesMailto}
                 className="inline-flex h-11 items-center justify-center rounded-full border border-[#cbdceb] bg-white px-6 text-sm font-medium text-[#355777] transition hover:bg-[#eef4fb]"
               >
                 Contact Sales
