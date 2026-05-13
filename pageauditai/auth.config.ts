@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
+import { getAuthSecret } from "@/lib/auth-secret";
 
 /**
  * Edge-safe Auth.js config (no Prisma, no DB, no credentials `authorize`).
@@ -10,7 +11,7 @@ export const authConfig = {
     signIn: "/login",
   },
   trustHost: true,
-  secret: process.env.AUTH_SECRET,
+  secret: getAuthSecret(),
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,

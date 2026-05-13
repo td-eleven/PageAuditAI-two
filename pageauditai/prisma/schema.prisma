@@ -10,6 +10,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PlanTier {
+  Starter
+  Growth
+  Pro
+}
+
 // Auth.js / NextAuth — https://authjs.dev/getting-started/adapters/prisma
 model Account {
   id                 String  @id @default(cuid())
@@ -51,8 +57,95 @@ model User {
   password      String?   @map("password_hash")
   accounts      Account[]
   sessions      Session[]
+  domains       Domain[]
+  planLimit     PlanLimit?
 
   @@map("users")
+}
+
+/// Tracked site / hostname for a user (e.g. example.com).
+model Domain {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  /// Normalized hostname or label for the property being audited.
+  name      String   @map("name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords           Keyword[]
+  opportunityUnlocks OpportunityUnlock[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("domains")
+}
+
+/// Rank-tracked search term scoped to a domain.
+model Keyword {
+  id                String    @id @default(cuid())
+  domainId          String    @map("domain_id")
+  /// The keyword phrase as tracked in rank APIs / SERP.
+  term              String    @map("term")
+  currentRank       Int?      @map("current_rank")
+  previousRank      Int?      @map("previous_rank")
+  searchVolume      Int?      @map("search_volume")
+  keywordDifficulty Int?      @map("keyword_difficulty")
+  opportunityScore  Int?      @map("opportunity_score")
+  lastRefreshedAt   DateTime? @map("last_refreshed_at")
+  nextRefreshAt     DateTime? @map("next_refresh_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  domain  Domain           @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  history KeywordHistory[]
+
+  @@unique([domainId, term])
+  @@index([domainId])
+  @@index([nextRefreshAt])
+  @@map("keywords")
+}
+
+/// Point-in-time rank snapshot for a keyword.
+model KeywordHistory {
+  id         String   @id @default(cuid())
+  keywordId  String   @map("keyword_id")
+  rank       Int
+  capturedAt DateTime @default(now()) @map("captured_at")
+
+  keyword Keyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@index([keywordId, capturedAt(sort: Desc)])
+  @@map("keyword_history")
+}
+
+/// Per-user subscription / quota caps (one row per user).
+model PlanLimit {
+  id                        String @id @default(cuid())
+  userId                    String @unique @map("user_id")
+  planTier                  PlanTier @default(Starter) @map("plan_tier")
+  maxDomains                Int    @map("max_domains")
+  maxKeywords               Int    @map("max_keywords")
+  monthlyOpportunityCredits Int    @map("monthly_opportunity_credits")
+  usedOpportunityCredits    Int    @default(0) @map("used_opportunity_credits")
+  creditPeriodStart         DateTime @default(now()) @map("credit_period_start")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("plan_limits")
+}
+
+/// Lead-capture unlock tracking for opportunity scanner by domain/email.
+model OpportunityUnlock {
+  id        String   @id @default(cuid())
+  domainId  String   @map("domain_id")
+  email     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@unique([domainId, email])
+  @@index([domainId])
+  @@map("opportunity_unlocks")
 }
 
 model VerificationToken {

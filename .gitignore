@@ -1,0 +1,3 @@
+# Secrets at repo root (Next app is in pageauditai/)
+.env
+.env.local

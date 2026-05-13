@@ -8,10 +8,23 @@
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio",
+    "db:migrate": "node scripts/with-env.mjs migrate dev",
+    "db:migrate:deploy": "node scripts/with-env.mjs migrate deploy",
+    "db:push": "node scripts/with-env.mjs db push",
+    "db:studio": "node scripts/with-env.mjs studio",
+    "db:seed": "node scripts/with-env.mjs db seed",
+    "db:verify-admin": "tsx prisma/verify-admin.ts",
+    "keywords:refresh:once": "tsx scripts/run-keyword-refresh-once.ts",
+    "keywords:verify": "tsx scripts/verify-keyword-refresh.ts",
+    "keywords:verify:cycle": "tsx scripts/verify-keyword-refresh-cycle.ts",
+    "opportunities:verify": "tsx scripts/verify-opportunity-flow.ts",
+    "plans:verify": "tsx scripts/verify-plan-enforcement.ts",
+    "billing:verify": "tsx scripts/verify-billing-upgrade.ts",
+    "billing:verify:test-mode": "tsx scripts/verify-billing-test-mode.ts",
     "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
@@ -29,9 +42,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.6.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
