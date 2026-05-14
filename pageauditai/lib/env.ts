@@ -15,6 +15,19 @@ function isProductionRuntime(): boolean {
 }
 
 /**
+ * Supabase pooler URLs need a separate DIRECT_URL for Prisma migrations (direct host).
+ */
+function warnIfSupabasePoolerWithoutDirectUrl(): void {
+  const db = process.env.DATABASE_URL ?? "";
+  if (!/pooler\.supabase\.com/i.test(db)) return;
+  if (process.env.DIRECT_URL?.trim()) return;
+  console.warn(
+    "[env] DATABASE_URL uses a Supabase pooler but DIRECT_URL is not set. " +
+      "Prisma migrations need DIRECT_URL (direct db.*.supabase.co:5432). See pageauditai/.env.example and npm run db:sync-direct-url.",
+  );
+}
+
+/**
  * Supabase "Session" / direct URLs use `db.<ref>.supabase.co:5432`. Vercel serverless
  * often cannot reach that host (IPv6 / routing / cold starts). Use the Transaction
  * pooler URI from Supabase → Settings → Database (port 6543, `*.pooler.supabase.com`).
@@ -68,6 +81,7 @@ export function validateProductionEnvironment(): void {
   }
 
   warnIfSupabaseDirectDatabaseUrlOnVercel(process.env.DATABASE_URL ?? "");
+  warnIfSupabasePoolerWithoutDirectUrl();
 
   if (process.env.VERCEL === "1" && !process.env.CRON_SECRET?.trim()) {
     console.warn(

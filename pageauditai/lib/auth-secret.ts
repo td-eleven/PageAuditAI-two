@@ -12,7 +12,8 @@ const DEV_FALLBACK_SECRET =
 let devWarned = false;
 
 export function getAuthSecret(): string {
-  const fromEnv = process.env.AUTH_SECRET?.trim();
+  const fromEnv =
+    process.env.AUTH_SECRET?.trim() || process.env.NEXTAUTH_SECRET?.trim();
   if (fromEnv && fromEnv.length > 0) {
     return fromEnv;
   }

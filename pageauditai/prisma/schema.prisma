@@ -5,9 +5,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Runtime queries use DATABASE_URL (e.g. Supabase pooler). Migrations use DIRECT_URL (direct host :5432).
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum PlanTier {

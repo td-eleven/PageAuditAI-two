@@ -5,6 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { authConfig } from "@/auth.config";
+import { getAuthSecret } from "@/lib/auth-secret";
 import { log } from "@/lib/logger";
 
 /**
@@ -13,6 +14,7 @@ import { log } from "@/lib/logger";
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  secret: getAuthSecret(),
   cookies: {
     sessionToken: {
       options: {

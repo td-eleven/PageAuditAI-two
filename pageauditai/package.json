@@ -10,6 +10,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "node scripts/with-env.mjs migrate dev",
     "db:migrate:deploy": "node scripts/with-env.mjs migrate deploy",
+    "db:sync-direct-url": "node scripts/sync-direct-url-from-database-url.mjs",
     "db:push": "node scripts/with-env.mjs db push",
     "db:studio": "node scripts/with-env.mjs studio",
     "db:seed": "node scripts/with-env.mjs db seed",
